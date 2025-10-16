@@ -12,4 +12,8 @@ public interface IPersonPersistencePort {
     Flux<BootcampPersonEntity> saveBootcampPerson(Person person, Flux<Bootcamp> bootcamps);
 
     Mono<Integer> countPeopleFromBootcamp(Bootcamp bootcamp);
+
+    Mono<Long> getBestBootcamp();
+
+    Flux<Person> getPeopleFromBootcamp(Long idBootcamp);
 }

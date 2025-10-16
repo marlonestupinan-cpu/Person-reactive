@@ -27,6 +27,7 @@ import static com.example.Person.domain.enums.TechnicalMessage.PERSON_ADDED;
 public class PersonHandler {
     private final IPersonServicePort personServicePort;
     private final IPersonDtoMapper personDtoMapper;
+
     public Mono<ServerResponse> register(ServerRequest request) {
         return request
                 .bodyToMono(RegisterPerson.class)
@@ -36,6 +37,23 @@ public class PersonHandler {
                         ServerResponse
                                 .ok()
                                 .bodyValue(PERSON_ADDED.getMessage()))
+                .transform(errorHandler());
+    }
+
+    public Mono<ServerResponse> getBestBootcamp(ServerRequest request) {
+        return personServicePort
+                .getBestBootcamp()
+                .flatMap(idBootcamp -> ServerResponse.ok().bodyValue(idBootcamp))
+                .transform(errorHandler());
+    }
+
+    public Mono<ServerResponse> getPeopleFromBootcamp(ServerRequest request) {
+        Long id = Long.parseLong(request.pathVariable("id"));
+        return personServicePort
+                .getPeopleFromBootcamp(id)
+                .collectList()
+                .flatMap(people ->
+                        ServerResponse.ok().bodyValue(people))
                 .transform(errorHandler());
     }
 

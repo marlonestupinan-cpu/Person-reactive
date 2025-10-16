@@ -66,6 +66,16 @@ public class PersonUseCase implements IPersonServicePort {
                 });
     }
 
+    @Override
+    public Mono<Long> getBestBootcamp() {
+        return personPersistencePort.getBestBootcamp();
+    }
+
+    @Override
+    public Flux<Person> getPeopleFromBootcamp(Long id) {
+        return personPersistencePort.getPeopleFromBootcamp(id);
+    }
+
     private void generateReport(List<Bootcamp> bootcamps) {
         Flux.fromIterable(bootcamps)
                 .flatMap(bootcamp -> personPersistencePort
