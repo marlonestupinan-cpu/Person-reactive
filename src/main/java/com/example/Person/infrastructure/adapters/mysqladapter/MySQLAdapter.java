@@ -35,4 +35,9 @@ public class MySQLAdapter implements IPersonPersistencePort {
                         .build())
                 );
     }
+
+    @Override
+    public Mono<Integer> countPeopleFromBootcamp(Bootcamp bootcamp) {
+        return bootcampPersonRepository.countByIdBootcamp(bootcamp.getId());
+    }
 }
