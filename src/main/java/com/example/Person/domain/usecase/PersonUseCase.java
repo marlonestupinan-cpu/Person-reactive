@@ -5,8 +5,10 @@ import com.example.Person.domain.enums.TechnicalMessage;
 import com.example.Person.domain.exceptions.BusinessException;
 import com.example.Person.domain.model.Bootcamp;
 import com.example.Person.domain.model.Person;
+import com.example.Person.domain.model.Report;
 import com.example.Person.domain.spi.IBootcampGateway;
 import com.example.Person.domain.spi.IPersonPersistencePort;
+import com.example.Person.domain.spi.IReportGateway;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ import java.util.List;
 public class PersonUseCase implements IPersonServicePort {
     private final IPersonPersistencePort personPersistencePort;
     private final IBootcampGateway bootcampGateway;
+    private final IReportGateway reportGateway;
 
     @Override
     public Mono<Person> registerPerson(Person person) {
@@ -37,6 +41,8 @@ public class PersonUseCase implements IPersonServicePort {
             throw new BusinessException(TechnicalMessage.DUPLICATED_BOOTCAMP);
         }
 
+        AtomicReference<List<Bootcamp>> bootcampsMem = new AtomicReference<>();
+
         return bootcampGateway
                 .getBootcampsById(person
                         .getBootcamps()
@@ -46,13 +52,27 @@ public class PersonUseCase implements IPersonServicePort {
                 .collectList()
                 .flatMap(listBootcamp -> {
                     validateBootcampInterval(listBootcamp);
+                    bootcampsMem.set(listBootcamp);
                     return personPersistencePort
                             .save(person)
                             .flatMap(personSaved -> personPersistencePort
                                     .saveBootcampPerson(personSaved, Flux.fromIterable(listBootcamp))
                                     .then(Mono.just(personSaved))
                             );
+                })
+                .doOnSuccess(finished -> {
+                    Mono.fromRunnable(() -> generateReport(bootcampsMem.get()))
+                            .subscribe();
                 });
+    }
+
+    private void generateReport(List<Bootcamp> bootcamps) {
+        Flux.fromIterable(bootcamps)
+                .flatMap(bootcamp -> personPersistencePort
+                        .countPeopleFromBootcamp(bootcamp)
+                        .flatMap(numPeople -> reportGateway
+                                .sendReport(Report.buildOf(bootcamp, numPeople))))
+                .subscribe();
     }
 
     private void validateBootcampInterval(List<Bootcamp> listBootcamp) {
@@ -71,5 +91,6 @@ public class PersonUseCase implements IPersonServicePort {
                 });
     }
 
-    record IntervalBootcamp(Long a, Long b, String name){}
+    record IntervalBootcamp(Long a, Long b, String name) {
+    }
 }

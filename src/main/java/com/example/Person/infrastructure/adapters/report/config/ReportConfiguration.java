@@ -1,4 +1,4 @@
-package com.example.Person.infrastructure.adapters.bootcamp.config;
+package com.example.Person.infrastructure.adapters.report.config;
 
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
@@ -19,9 +19,9 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 @Configuration
 @RequiredArgsConstructor
-public class BootcampConfiguration {
-    private final BootcampProperties properties;
-    @Bean("bootcampWebClient")
+public class ReportConfiguration {
+    private final ReportProperties properties;
+    @Bean("reportWebClient")
     public WebClient webClient() {
         return WebClient.builder()
                 .baseUrl(properties.getBaseUrl())

@@ -10,4 +10,6 @@ public interface IPersonPersistencePort {
     Mono<Person> save(Person person);
 
     Flux<BootcampPersonEntity> saveBootcampPerson(Person person, Flux<Bootcamp> bootcamps);
+
+    Mono<Integer> countPeopleFromBootcamp(Bootcamp bootcamp);
 }
